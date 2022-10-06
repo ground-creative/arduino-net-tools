@@ -1,3 +1,9 @@
+/**
+	Net tools helper
+	Author: Carlo Pietrobattista
+	Version: 1.1
+*/
+
 #include <Arduino.h>
 #include "NetTools.h"
 #include <PubSubClient.h>
@@ -57,18 +63,18 @@ uint8_t NetTools::WIFI::status()
 void NetTools::WIFI::check(int interval)
 {
 	unsigned long current_time = millis();
-	/*if ( ( WiFi.status( ) != WL_CONNECTED ) && ( current_time - _previous_time >=interval ) )  
+	if ( ( WiFi.status( ) != WL_CONNECTED ) && ( current_time - _previous_time >=interval ) )  
 	{
 		Serial.println( "WiFI is disconnected, reconnecting" );
 		WiFi.disconnect( );
 		WiFi.reconnect( );
 		_previous_time = current_time;
-	}*/
-	if(WiFi.status() != WL_CONNECTED)  
-	{
-		Serial.println("WiFI is disconnected, restarting chip");
-		ESP.restart();
 	}
+	/*if (WiFi.status() != WL_CONNECTED)  
+	{
+		Serial.println("WiFI is disconnected, tried to reconnect too many times. Restarting chip");
+		ESP.restart();
+	}*/
 }
 
 NetTools::MQTT::MQTT(const char* server, std::function<void( char*, byte*, unsigned int )> callback, int port )
@@ -103,12 +109,12 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 			client.publish( String( "device-status/" + _clientID ).c_str( ), "online", true );
 			return true;
 		}
-		else if ( current_attempt >= mqtt_max_reconnect_attemps )
+		/*else if ( current_attempt >= mqtt_max_reconnect_attemps )
 		{
 			
 			Serial.println( "Unable to connect MQTT server, restarting chip to try again!" );
 			ESP.restart( );
-		}
+		}*/
 		else 
 		{
 			Serial.print( "attempt ");

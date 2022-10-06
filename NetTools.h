@@ -29,8 +29,8 @@ namespace NetTools
 	class MQTT
 	{
 		public:
-			MQTT(String clientID, const char* server, std::function<void( char*, byte*, unsigned int )> callback = NULL, int port = 1883);
-			int connect(const char* username = NULL, const char* password = NULL,  int interval = 5000);
+			MQTT(const char* server, std::function<void( char*, byte*, unsigned int )> callback = NULL, int port = 1883);
+			int connect(String mqttClientID, const char* username = NULL, const char* password = NULL,  int interval = 5000);
 			void publish(char* topic, char* value);
 			void subscribe(char* topic);
 			void loop();

@@ -71,11 +71,10 @@ void NetTools::WIFI::check(int interval)
 	}
 }
 
-NetTools::MQTT::MQTT( String clientID, const char* server, std::function<void( char*, byte*, unsigned int )> callback, int port )
+NetTools::MQTT::MQTT(const char* server, std::function<void( char*, byte*, unsigned int )> callback, int port )
 {
 	_server = server;
 	_port = port;
-	_clientID = clientID;
 	client.setServer( _server, _port ).setCallback( callback );
 }
 
@@ -89,8 +88,9 @@ boolean NetTools::MQTT::isConnected()
 	return client.connected();
 }
 
-int NetTools::MQTT::connect(const char* username, const char* password, int interval)
+int NetTools::MQTT::connect(String mqttClientID, const char* username, const char* password, int interval)
 {
+	_clientID = mqttClientID;
 	unsigned int current_attempt = 1;
 	String clientID = _clientID + String( "-" + WiFi.macAddress( ) );
 	while ( !client.connected( ) && WiFi.status( ) == WL_CONNECTED ) 

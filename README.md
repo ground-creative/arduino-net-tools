@@ -11,7 +11,6 @@ network.connect();
 // Check Wifi Status
 network.check();
 ```
-
 ## Examples mqtt tools
 ```
 // Init mqtt tools

@@ -1,8 +1,8 @@
 # Arduino Network Tools
 
-## Examples
+## Examples Wifi tools
 ```
-// Examples Wifi tools
+// Init Wifi tools
 NetTools::WIFI network(ssid, password);
 
 // Connect to Wi-Fi
@@ -15,7 +15,7 @@ network.check();
 
 ## Examples Mqtt tools
 ```
-// Mqtt tools
+// Init mqtt tools
 NetTools::MQTT mqtt(mqttClientID, mqtt_server, mqtt_callback);
   
 // Connect or reconnect to mqtt

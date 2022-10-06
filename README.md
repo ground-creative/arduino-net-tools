@@ -13,7 +13,7 @@ network.connect();
 network.check();
 ```
 
-## Examples Mqtt tools
+## Examplesm mqtt tools
 ```
 // Init mqtt tools
 NetTools::MQTT mqtt(mqttClientID, mqtt_server, mqtt_callback);

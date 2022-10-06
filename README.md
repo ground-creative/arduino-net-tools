@@ -14,10 +14,10 @@ network.check();
 ## Examples mqtt tools
 ```
 // Init mqtt tools
-NetTools::MQTT mqtt(mqttClientID, mqtt_server, mqtt_callback);
+NetTools::MQTT mqtt(mqtt_server, mqtt_callback);
   
 // Connect or reconnect to mqtt
-if(mqtt.connect(mqtt_username, mqtt_password))
+if(mqtt.connect(mqtt_client_id, mqtt_username, mqtt_password))
 {
   // do something
 }

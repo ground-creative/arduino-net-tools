@@ -24,17 +24,17 @@ NetTools::WIFI::WIFI(const char* ssid, const char* password)
 void NetTools::WIFI::connect() 
 {
 	WiFi.mode(WIFI_STA);
-	WiFi.begin(_ssid , _password);
+	WiFi.begin(_ssid, _password);
 	Serial.print("Connecting to WiFi network");
 	Serial.println("");
 	Serial.println(_ssid);
 	unsigned int current_attempt = 1;
-	while(WiFi.status() != WL_CONNECTED) 
+	while (WiFi.status() != WL_CONNECTED) 
 	{
 		if (current_attempt >= wifi_max_reconnect_attemps)
 		{
 			
-			Serial.println("Unable to connect MQTT server, restarting chip to try again!");
+			Serial.println("Unable to connect WiFi network, restarting chip to try again!");
 			ESP.restart();
 		}
 		else 
@@ -63,11 +63,11 @@ uint8_t NetTools::WIFI::status()
 void NetTools::WIFI::check(int interval)
 {
 	unsigned long current_time = millis();
-	if ( ( WiFi.status( ) != WL_CONNECTED ) && ( current_time - _previous_time >=interval ) )  
+	if ((WiFi.status() != WL_CONNECTED) && (current_time - _previous_time >=interval))  
 	{
-		Serial.println( "WiFI is disconnected, reconnecting" );
-		WiFi.disconnect( );
-		WiFi.reconnect( );
+		Serial.println("WiFI is disconnected, reconnecting");
+		WiFi.disconnect();
+		WiFi.reconnect();
 		_previous_time = current_time;
 	}
 	/*if (WiFi.status() != WL_CONNECTED)  
@@ -77,11 +77,34 @@ void NetTools::WIFI::check(int interval)
 	}*/
 }
 
-NetTools::MQTT::MQTT(const char* server, std::function<void( char*, byte*, unsigned int )> callback, int port )
+bool NetTools::WIFI::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder)
+{
+	return WiFi.softAP(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder);
+}
+
+WiFiAPClass NetTools::WIFI::getSoftAP()
+{
+	return WiFiAPClass();
+}
+
+WiFiClass NetTools::WIFI::getObject()
+{
+	return WiFi;
+}
+NetTools::MQTT::MQTT(){}
+
+NetTools::MQTT::MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)
 {
 	_server = server;
 	_port = port;
-	client.setServer( _server, _port ).setCallback( callback );
+	//client.setServer(_server, _port).setCallback(callback);
+}
+
+void NetTools::MQTT::setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)
+{
+	_server = server;
+	_port = port;
+	client.setServer(_server, _port).setCallback(callback);
 }
 
 PubSubClient NetTools::MQTT::getClient()
@@ -98,15 +121,15 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 {
 	_clientID = mqttClientID;
 	unsigned int current_attempt = 1;
-	String clientID = _clientID + String( "-" + WiFi.macAddress( ) );
-	while ( !client.connected( ) && WiFi.status( ) == WL_CONNECTED ) 
+	String clientID = _clientID + String("-" + WiFi.macAddress());
+	while (!client.connected() && WiFi.status() == WL_CONNECTED) 
 	{
-		Serial.print( "Attempting MQTT connection..." );
-		if ( client.connect( clientID.c_str( ), username, password , 
-					String( "device-status/" + _clientID ).c_str( ), 1, true, "offline" ) ) 
+		Serial.print("Attempting MQTT connection...");
+		if (client.connect(clientID.c_str(), username, password , 
+					String("device-status/" + _clientID).c_str(), 1, true, "offline")) 
 		{
-			Serial.println( "connected" );
-			client.publish( String( "device-status/" + _clientID ).c_str( ), "online", true );
+			Serial.println("connected");
+			client.publish(String("device-status/" + _clientID).c_str(), "online", true);
 			return true;
 		}
 		/*else if ( current_attempt >= mqtt_max_reconnect_attemps )
@@ -117,41 +140,41 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 		}*/
 		else 
 		{
-			Serial.print( "attempt ");
-			Serial.print( current_attempt );
-			Serial.print( " failed, rc=" );
-			Serial.print( client.state( ) );
-			Serial.print( " trying again in " );
-			Serial.print( ( interval / 1000 ) );
-			Serial.print( " seconds" );
-			Serial.println( "" );
+			Serial.print("attempt ");
+			Serial.print(current_attempt);
+			Serial.print(" failed, rc=");
+			Serial.print(client.state());
+			Serial.print(" trying again in ");
+			Serial.print((interval/1000));
+			Serial.print(" seconds");
+			Serial.println("");
 			current_attempt++;
-			delay( interval );
+			delay(interval);
 		}
 	}
 	return false;
 }
 
-void NetTools::MQTT::publish( char* topic, char* value )
+void NetTools::MQTT::publish(char* topic, char* value)
 {
-	Serial.println( "Publishing MQTT data" );
-	Serial.print( "Topic: " );
-	Serial.print( topic );
-	Serial.print( " | Value: " );
-	Serial.print( value );
-	Serial.println( "" );
-	client.publish( topic, value );
+	Serial.println("Publishing MQTT data");
+	Serial.print("Topic: ");
+	Serial.print(topic);
+	Serial.print(" | Value: ");
+	Serial.print(value);
+	Serial.println("");
+	client.publish(topic, value);
 }
 
-void NetTools::MQTT::subscribe( char* topic )
+void NetTools::MQTT::subscribe(char* topic)
 {
-	Serial.print( "Subscribing to topic: " );
-	Serial.print( topic );
-	Serial.println( "" );
-	client.subscribe( topic );
+	Serial.print("Subscribing to topic: ");
+	Serial.print(topic);
+	Serial.println("");
+	client.subscribe(topic);
 }
 
-void NetTools::MQTT::loop( )
+void NetTools::MQTT::loop()
 {
-	client.loop( );
+	client.loop();
 }

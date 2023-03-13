@@ -15,11 +15,18 @@ namespace NetTools
 	class WIFI
 	{
 		public:
-			WIFI(const char* ssid, const char* password);
+			WIFI(const char* ssid = NULL, const char* password = NULL);
 			void connect();
 			IPAddress localAddress();
 			void check(int interval = 20000);
 			uint8_t status();
+			bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
+			bool softAP(const String& ssid, const String& passphrase = emptyString, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false) 
+			{
+				return WiFi.softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection, ftm_responder);
+			};
+			WiFiAPClass getSoftAP();
+			WiFiClass getObject();
 		private:
 			const char* _ssid;
 			const char* _password;
@@ -29,11 +36,13 @@ namespace NetTools
 	class MQTT
 	{
 		public:
-			MQTT(const char* server, std::function<void( char*, byte*, unsigned int )> callback = NULL, int port = 1883);
-			int connect(String mqttClientID, const char* username = NULL, const char* password = NULL,  int interval = 5000);
+			MQTT();
+			MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
+			int connect(String mqttClientID, const char* username = NULL, const char* password = NULL, int interval = 5000);
 			void publish(char* topic, char* value);
 			void subscribe(char* topic);
 			void loop();
+			void setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
 			PubSubClient getClient();
 			boolean isConnected();
 		private:

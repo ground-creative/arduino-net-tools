@@ -22,3 +22,12 @@ if(mqtt.connect(mqtt_client_id, mqtt_username, mqtt_password))
   // do something
 }
 ```
+## Creating and including trust anchors for ssl
+
+Use the command line tool included in bearssl package
+```
+git clone https://www.bearssl.org/git/BearSSL
+```
+
+Create 2 files called NetToolsEnvDev.h and NetToolsCertsProd.h
+Include there the trust anchors generated with bearssl package

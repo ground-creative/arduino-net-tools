@@ -1,18 +1,27 @@
 #ifndef _NET_TOOLS_H
 #define _NET_TOOLS_H
 #include <Arduino.h>
-
 #ifdef ESP32
 	#include <WiFi.h>
 #else
 	#include <ESP8266WiFi.h>
 #endif
-
 #include <SPI.h>
 #include <Ethernet.h>
 #include "WiFiClientSecure.h"
-//#include <SSLClient.h> 
+#include <SSLClient.h> 
 #include <PubSubClient.h>
+#if defined __has_include
+	#if __has_include ("NetToolsEnvDev.h")
+		#include "NetToolsCertsDev.h"
+	#elif __has_include ("NetToolsEnvProd.h")
+		#include "NetToolsCertsProd.h"
+	#else
+		#include "trust_anchors.h"
+	#endif;
+#else
+	#include "trust_anchors.h"
+#endif;
 
 namespace NetTools
 {

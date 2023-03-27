@@ -3,7 +3,7 @@
 	Author: Ground Creative
 */
 
-#define _VERSION_ 1.0.1
+#define _VERSION_ 1.1.0
 #include "NetTools.h"
 
 WiFiClientSecure mqttWiFiClientSecure;
@@ -12,9 +12,8 @@ WiFiClient mqttWiFiClient;
 PubSubClient wifiClient(mqttWiFiClient);
 EthernetClient mqttEthClient;
 PubSubClient ethClient(mqttEthClient);
-
-//SSLClient ethClientSSL(mqttEthClient, TAs, (size_t)TAs_NUM, A5);
-//PubSubClient ethClientSecure(ethClientSSL);
+SSLClient ethClientSSL(mqttEthClient, TAs, (size_t)TAs_NUM, A5);
+PubSubClient ethClientSecure(ethClientSSL);
 
 //int mqtt_max_reconnect_attemps = 20;
 
@@ -109,7 +108,7 @@ NetTools::MQTT::MQTT(String clientType)
 	if (clientType == "ethernet"){ _client = ethClient; }
 	else if (clientType == "wifi"){ _client = wifiClient; }
 	else if (clientType == "wifiSecure"){ _client = wifiClientSecure; }
-	//else if (clientType == "ethernetSecure"){ _client = ethClientSecure; }
+	else if (clientType == "ethernetSecure"){ _client = ethClientSecure; }
 }
 
 NetTools::MQTT::MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)
@@ -154,11 +153,12 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 	while (!_client.connected() && 
 			(WiFi.status() == WL_CONNECTED || Ethernet.linkStatus() == LinkON)) 
 	{
-		Serial.print("Attempting MQTT connection...");
+		Serial.print("Attempting MQTT connection with server ");
+		Serial.print(String(_server) + ":" + String(_port) + " ");
 		if (_client.connect(clientID.c_str(), username, password , 
-					String("device-status/" + _clientID).c_str(), 1, true, "offline")) 
+			String("device-status/" + _clientID).c_str(), 1, true, "offline")) 
 		{
-			Serial.println("connected");
+			Serial.println("connected!");
 			_client.publish(String("device-status/" + _clientID).c_str(), "online", true);
 			return true;
 		}

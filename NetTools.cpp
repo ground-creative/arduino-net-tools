@@ -1,20 +1,20 @@
 /**
 	Net tools helper
-	Author: Carlo Pietrobattista
-	Version: 1.1
+	Author: Ground Creative
 */
 
-#define _VERSION_ 1.0.0
-#include <Arduino.h>
+#define _VERSION_ 1.0.1
 #include "NetTools.h"
-#include <PubSubClient.h>
-#include <SPI.h>
-#include <Ethernet.h>
 
+WiFiClientSecure mqttWiFiClientSecure;
+PubSubClient wifiClientSecure(mqttWiFiClientSecure);
 WiFiClient mqttWiFiClient;
 PubSubClient wifiClient(mqttWiFiClient);
 EthernetClient mqttEthClient;
 PubSubClient ethClient(mqttEthClient);
+
+//SSLClient ethClientSSL(mqttEthClient, TAs, (size_t)TAs_NUM, A5);
+//PubSubClient ethClientSecure(ethClientSSL);
 
 //int mqtt_max_reconnect_attemps = 20;
 
@@ -105,8 +105,11 @@ WiFiClass NetTools::WIFI::getObject()
 }
 NetTools::MQTT::MQTT(String clientType)
 {
-	Serial.println(clientType);
-	_client = (clientType == "ethernet") ? ethClient : wifiClient;
+	//_client = (clientType == "ethernet") ? ethClient : wifiClient;
+	if (clientType == "ethernet"){ _client = ethClient; }
+	else if (clientType == "wifi"){ _client = wifiClient; }
+	else if (clientType == "wifiSecure"){ _client = wifiClientSecure; }
+	//else if (clientType == "ethernetSecure"){ _client = ethClientSecure; }
 }
 
 NetTools::MQTT::MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)
@@ -114,6 +117,11 @@ NetTools::MQTT::MQTT(const char* server, std::function<void(char*, byte*, unsign
 	_server = server;
 	_port = port;
 	//client.setServer(_server, _port).setCallback(callback);
+}
+
+void NetTools::MQTT::setCert(const char *cert)
+{
+	mqttWiFiClientSecure.setCACert(cert);
 }
 
 void NetTools::MQTT::setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)

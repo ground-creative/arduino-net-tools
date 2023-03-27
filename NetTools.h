@@ -8,6 +8,10 @@
 	#include <ESP8266WiFi.h>
 #endif
 
+#include <SPI.h>
+#include <Ethernet.h>
+#include "WiFiClientSecure.h"
+//#include <SSLClient.h> 
 #include <PubSubClient.h>
 
 namespace NetTools
@@ -41,6 +45,7 @@ namespace NetTools
 			int connect(String mqttClientID, const char* username = NULL, const char* password = NULL, int interval = 5000);
 			void publish(char* topic, char* value);
 			void subscribe(char* topic);
+			void setCert(const char* cert);
 			void loop();
 			void setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
 			void disconnect();

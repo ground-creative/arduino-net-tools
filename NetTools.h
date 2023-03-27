@@ -36,19 +36,21 @@ namespace NetTools
 	class MQTT
 	{
 		public:
-			MQTT();
+			MQTT(String clientType = "wifi");
 			MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
 			int connect(String mqttClientID, const char* username = NULL, const char* password = NULL, int interval = 5000);
 			void publish(char* topic, char* value);
 			void subscribe(char* topic);
 			void loop();
 			void setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
+			void disconnect();
 			PubSubClient getClient();
 			boolean isConnected();
 		private:
 			const char* _server;
 			const char* _username;
 			const char* _password;
+			PubSubClient _client;
 			String _clientID;
 			int _port = 1883;
 	};

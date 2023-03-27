@@ -4,16 +4,23 @@
 	Version: 1.1
 */
 
+#define _VERSION_ 1.0.0
 #include <Arduino.h>
 #include "NetTools.h"
 #include <PubSubClient.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
-WiFiClient mqttClient;
-PubSubClient client(mqttClient);
+WiFiClient mqttWiFiClient;
+PubSubClient wifiClient(mqttWiFiClient);
+EthernetClient mqttEthClient;
+PubSubClient ethClient(mqttEthClient);
 
-int mqtt_max_reconnect_attemps = 20;
+//int mqtt_max_reconnect_attemps = 20;
 
 int wifi_max_reconnect_attemps = 120;
+
+int wifi_pause_time = 10000;
 
 NetTools::WIFI::WIFI(const char* ssid, const char* password)
 {
@@ -33,9 +40,14 @@ void NetTools::WIFI::connect()
 	{
 		if (current_attempt >= wifi_max_reconnect_attemps)
 		{
-			
-			Serial.println("Unable to connect WiFi network, restarting chip to try again!");
-			ESP.restart();
+			//Serial.println("Unable to connect WiFi network, restarting chip to try again!");
+			//ESP.restart();
+			Serial.println("Unable to connect WiFi network, switching radio off and on!");
+			WiFi.mode(WIFI_MODE_NULL);
+			delay(wifi_pause_time);
+			WiFi.mode(WIFI_STA);
+			WiFi.begin(_ssid, _password);
+			current_attempt = 1;
 		}
 		else 
 		{
@@ -91,7 +103,11 @@ WiFiClass NetTools::WIFI::getObject()
 {
 	return WiFi;
 }
-NetTools::MQTT::MQTT(){}
+NetTools::MQTT::MQTT(String clientType)
+{
+	Serial.println(clientType);
+	_client = (clientType == "ethernet") ? ethClient : wifiClient;
+}
 
 NetTools::MQTT::MQTT(const char* server, std::function<void(char*, byte*, unsigned int)> callback, int port)
 {
@@ -104,17 +120,22 @@ void NetTools::MQTT::setServer(const char* server, std::function<void(char*, byt
 {
 	_server = server;
 	_port = port;
-	client.setServer(_server, _port).setCallback(callback);
+	_client.setServer(_server, _port).setCallback(callback);
 }
 
 PubSubClient NetTools::MQTT::getClient()
 {
-	return client;
+	return _client;
 }
 
 boolean NetTools::MQTT::isConnected()
 {
-	return client.connected();
+	return _client.connected();
+}
+
+void NetTools::MQTT::disconnect()
+{
+	return _client.disconnect();
 }
 
 int NetTools::MQTT::connect(String mqttClientID, const char* username, const char* password, int interval)
@@ -122,14 +143,15 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 	_clientID = mqttClientID;
 	unsigned int current_attempt = 1;
 	String clientID = _clientID + String("-" + WiFi.macAddress());
-	while (!client.connected() && WiFi.status() == WL_CONNECTED) 
+	while (!_client.connected() && 
+			(WiFi.status() == WL_CONNECTED || Ethernet.linkStatus() == LinkON)) 
 	{
 		Serial.print("Attempting MQTT connection...");
-		if (client.connect(clientID.c_str(), username, password , 
+		if (_client.connect(clientID.c_str(), username, password , 
 					String("device-status/" + _clientID).c_str(), 1, true, "offline")) 
 		{
 			Serial.println("connected");
-			client.publish(String("device-status/" + _clientID).c_str(), "online", true);
+			_client.publish(String("device-status/" + _clientID).c_str(), "online", true);
 			return true;
 		}
 		/*else if ( current_attempt >= mqtt_max_reconnect_attemps )
@@ -143,7 +165,7 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 			Serial.print("attempt ");
 			Serial.print(current_attempt);
 			Serial.print(" failed, rc=");
-			Serial.print(client.state());
+			Serial.print(_client.state());
 			Serial.print(" trying again in ");
 			Serial.print((interval/1000));
 			Serial.print(" seconds");
@@ -158,12 +180,9 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 void NetTools::MQTT::publish(char* topic, char* value)
 {
 	Serial.println("Publishing MQTT data");
-	Serial.print("Topic: ");
-	Serial.print(topic);
-	Serial.print(" | Value: ");
-	Serial.print(value);
+	Serial.print("Topic: "); Serial.print(topic); Serial.print(" | Value: "); Serial.print(value); Serial.println("");
 	Serial.println("");
-	client.publish(topic, value);
+	_client.publish(topic, value);
 }
 
 void NetTools::MQTT::subscribe(char* topic)
@@ -171,10 +190,10 @@ void NetTools::MQTT::subscribe(char* topic)
 	Serial.print("Subscribing to topic: ");
 	Serial.print(topic);
 	Serial.println("");
-	client.subscribe(topic);
+	_client.subscribe(topic);
 }
 
 void NetTools::MQTT::loop()
 {
-	client.loop();
+	_client.loop();
 }

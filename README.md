@@ -29,5 +29,4 @@ Use the command line tool included in bearssl package
 git clone https://www.bearssl.org/git/BearSSL
 ```
 
-Create 2 files called NetToolsEnvDev.h and NetToolsCertsProd.h <br>
-Include there the trust anchors generated with bearssl package
+Create 2 files called NetToolsEnvDev.h and NetToolsCertsProd.h and iclude there the trust anchors generated with bearssl package

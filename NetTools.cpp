@@ -142,6 +142,8 @@ boolean NetTools::MQTT::isConnected()
 
 void NetTools::MQTT::disconnect()
 {
+	Serial.print("Disconnecting from MQTT server ");
+	Serial.print(String(_server) + ":" + String(_port) + " ");
 	return _client.disconnect();
 }
 

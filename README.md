@@ -24,9 +24,21 @@ if(mqtt.connect(mqtt_client_id, mqtt_username, mqtt_password))
 ```
 ## Creating and including trust anchors for ssl
 
-Use the command line tool included in bearssl package
+Use the command line tool included in the sslclient package
 ```
-git clone https://www.bearssl.org/git/BearSSL
+git clone https://github.com/OPEnSLab-OSU/SSLClient
+
+python3 pycert_bearssl.py convert --no-search ca.crt
 ```
 
-Create 2 files called NetToolsEnvDev.h and NetToolsCertsProd.h and iclude there the trust anchors generated with bearssl package
+Create a file called NetToolsEnv.h and include the following code
+```
+// this file alerts netTools to use custom trust anchors
+
+// 0 for dev, 1 for prod
+
+#define __NET_TOOLS_ENV__ 1
+
+```
+
+Create 2 more files called NetToolsCertsDev.h and NetToolsCertsProd.h and iclude there the trust anchors generated with bearssl package

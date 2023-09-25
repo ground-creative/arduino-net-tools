@@ -11,13 +11,12 @@
 #include "WiFiClientSecure.h"
 #include <SSLClient.h> 
 #include <PubSubClient.h>
-#if defined __has_include
-	#if __has_include ("NetToolsEnvDev.h")
-		#include "NetToolsCertsDev.h"
-	#elif __has_include ("NetToolsEnvProd.h")
+#if defined __has_include && __has_include ("NetToolsEnv.h")
+	#include "NetToolsEnv.h"
+	#if (__NET_TOOLS_ENV__ == 1)
 		#include "NetToolsCertsProd.h"
 	#else
-		#include "trust_anchors.h"
+		#include "NetToolsCertsDev.h"
 	#endif;
 #else
 	#include "trust_anchors.h"

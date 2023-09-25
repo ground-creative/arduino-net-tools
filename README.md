@@ -41,4 +41,4 @@ Create a file called NetToolsEnv.h and include the following code
 
 ```
 
-Create 2 more files called NetToolsCertsDev.h and NetToolsCertsProd.h and iclude there the trust anchors generated with bearssl package
+Create 2 more files called NetToolsCertsDev.h and NetToolsCertsProd.h and include there the trust anchors generated with bearssl package

@@ -57,13 +57,17 @@ namespace NetTools
 			void loop();
 			void setServer(const char* server, std::function<void(char*, byte*, unsigned int)> callback = NULL, int port = 1883);
 			void disconnect();
-			PubSubClient getClient();
+			void setSocketTimeout(int timeout);
+			void setKeepAlive(int value);
+			void setBufferSize(int value);
+			PubSubClient& getClient();
 			boolean isConnected();
 		private:
 			const char* _server;
 			const char* _username;
 			const char* _password;
 			PubSubClient _client;
+			String _clientType;
 			String _clientID;
 			int _port = 1883;
 	};

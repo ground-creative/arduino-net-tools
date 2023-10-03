@@ -3,7 +3,7 @@
 	Author: Ground Creative
 */
 
-#define _VERSION_ 1.1.0
+#define _VERSION_ 1.1.1
 #include "NetTools.h"
 
 WiFiClientSecure mqttWiFiClientSecure;
@@ -12,7 +12,7 @@ WiFiClient mqttWiFiClient;
 PubSubClient wifiClient(mqttWiFiClient);
 EthernetClient mqttEthClient;
 PubSubClient ethClient(mqttEthClient);
-SSLClient ethClientSSL(mqttEthClient, TAs, (size_t)TAs_NUM, A5);
+SSLClient ethClientSSL(mqttEthClient, TAs, (size_t)TAs_NUM, A5, SSLClient::SSL_DUMP);
 PubSubClient ethClientSecure(ethClientSSL);
 
 //int mqtt_max_reconnect_attemps = 20;
@@ -37,6 +37,11 @@ void NetTools::WIFI::connect()
 	unsigned int current_attempt = 1;
 	while (WiFi.status() != WL_CONNECTED) 
 	{
+		if (Ethernet.hardwareStatus() != EthernetNoHardware && Ethernet.linkStatus() == LinkON)
+		{
+			Serial.println("Ethernet cable has been connected.");
+			ESP.restart();
+		}
 		if (current_attempt >= wifi_max_reconnect_attemps)
 		{
 			//Serial.println("Unable to connect WiFi network, restarting chip to try again!");
@@ -105,6 +110,7 @@ WiFiClass NetTools::WIFI::getObject()
 NetTools::MQTT::MQTT(String clientType)
 {
 	//_client = (clientType == "ethernet") ? ethClient : wifiClient;
+	_clientType = clientType;
 	if (clientType == "ethernet"){ _client = ethClient; }
 	else if (clientType == "wifi"){ _client = wifiClient; }
 	else if (clientType == "wifiSecure"){ _client = wifiClientSecure; }
@@ -130,7 +136,7 @@ void NetTools::MQTT::setServer(const char* server, std::function<void(char*, byt
 	_client.setServer(_server, _port).setCallback(callback);
 }
 
-PubSubClient NetTools::MQTT::getClient()
+PubSubClient& NetTools::MQTT::getClient()
 {
 	return _client;
 }
@@ -144,7 +150,28 @@ void NetTools::MQTT::disconnect()
 {
 	Serial.print("Disconnecting from MQTT server ");
 	Serial.print(String(_server) + ":" + String(_port) + " ");
-	return _client.disconnect();
+	_client.disconnect();
+}
+
+void NetTools::MQTT::setSocketTimeout(int timeout)
+{
+	Serial.print("Setting mqtt socket timeout to ");
+	Serial.println(timeout);
+	_client.setSocketTimeout(timeout);
+}
+
+void NetTools::MQTT::setKeepAlive(int value)
+{
+	Serial.print("Setting mqtt keep alive value ");
+	Serial.println(value);
+	_client.setKeepAlive(value);
+}
+
+void NetTools::MQTT::setBufferSize(int value)
+{
+	Serial.print("Setting mqtt buffer size to ");
+	Serial.println(value);
+	_client.setBufferSize(value);
 }
 
 int NetTools::MQTT::connect(String mqttClientID, const char* username, const char* password, int interval)
@@ -152,9 +179,13 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 	_clientID = mqttClientID;
 	unsigned int current_attempt = 1;
 	String clientID = _clientID + String("-" + WiFi.macAddress());
-	while (!_client.connected() && 
-			(WiFi.status() == WL_CONNECTED || Ethernet.linkStatus() == LinkON)) 
+	while (!_client.connected() && (WiFi.status() == WL_CONNECTED || Ethernet.linkStatus() == LinkON)) 
 	{
+		if (WiFi.status() == WL_CONNECTED && Ethernet.linkStatus() == LinkON)
+		{
+			Serial.println("Ethernet cable has been connected.");
+			ESP.restart();	
+		}
 		Serial.print("Attempting MQTT connection with server ");
 		Serial.print(String(_server) + ":" + String(_port) + " ");
 		if (_client.connect(clientID.c_str(), username, password , 
@@ -164,11 +195,11 @@ int NetTools::MQTT::connect(String mqttClientID, const char* username, const cha
 			_client.publish(String("device-status/" + _clientID).c_str(), "online", true);
 			return true;
 		}
-		/*else if ( current_attempt >= mqtt_max_reconnect_attemps )
+		/*else if (current_attempt >= mqtt_max_reconnect_attemps)
 		{
 			
-			Serial.println( "Unable to connect MQTT server, restarting chip to try again!" );
-			ESP.restart( );
+			Serial.println("Unable to connect MQTT server, restarting chip to try again!");
+			ESP.restart();
 		}*/
 		else 
 		{
@@ -193,6 +224,10 @@ void NetTools::MQTT::publish(char* topic, char* value)
 	Serial.print("Topic: "); Serial.print(topic); Serial.print(" | Value: "); Serial.print(value); Serial.println("");
 	Serial.println("");
 	_client.publish(topic, value);
+	/*if (_clientType == "ethernetSecure")
+	{
+		ethClientSSL.flush();
+	}*/
 }
 
 void NetTools::MQTT::subscribe(char* topic)
